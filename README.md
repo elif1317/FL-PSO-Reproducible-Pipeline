@@ -22,3 +22,11 @@ All numerical results reported in the paper can be reproduced under transparent 
 - Command-line interface with sensible defaults
 - Outputs: results tables, convergence curves, runtime info
 
+## Requirements
+
+Install all dependencies with:
+
+```bash
+pip install -r requirements.txt
+
+
