@@ -1,0 +1,9 @@
+# Clone the repository
+git clone https://github.com/elif1317/FL-PSO-Reproducible-Pipeline.git
+cd FL-PSO-Reproducible-Pipeline
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the default experiment (classical benchmarks, D=30)
+python fl_pso_pipeline.py
