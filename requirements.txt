@@ -1,4 +1,7 @@
-numpy>=1.26.0
-scipy>=1.13.0
-pandas>=2.2.0
-matplotlib>=3.8.0
+# FL-PSO Reproducible Pipeline - Exact versions for full reproducibility
+# Tested and working combination
+
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.2
+matplotlib==3.9.2
