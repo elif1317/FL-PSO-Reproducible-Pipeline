@@ -5,34 +5,26 @@ FL-PSO (Residual-Corrected Fractional–Langevin PSO) — Reproducible Experimen
 
 Single-file, copy-paste runnable script designed for reproducibility in academic work.
 
-Features:
-- No hard-coded absolute paths → uses repository-relative paths
-- Optional CEC 2017/2022 support (Python wrappers or input_data folders)
-- Graceful skipping if benchmark resources are missing
-- Fixed seeds, FE-based termination, portable output structure
-- Convergence curves, diversity tracking, basic statistical summary
+Authors:
+    Elif Demir¹, Yusuf Zeren¹, Suayip Toprakseven², Alpaslan Demirci³ (corresponding author)
+¹ Department of Mathematics, Yildiz Technical University, Istanbul, Turkey
+² Department of Mathematics, Yozgat Bozok University, Yozgat, Turkey
+³ Department of Electrical Engineering, Yildiz Technical University, Istanbul, Turkey
 
-Recommended repository structure:
-.
-├── fl_pso_pipeline.py          ← this file
-├── outputs/                    ← results will be saved here
-├── wrappers/                   ← optional: put cec17_test_func.py, cec22_test_func.py here
-└── input_data/                 ← optional: cec2017/ and cec2022/ input_data folders
-    ├── cec2017/
-    └── cec2022/
+Features:
+- No hard-coded paths → repository-relative + environment variable support
+- Optional CEC 2017/2022 support (gracefully skipped if missing)
+- Fixed seeds, FE-based termination
+- Convergence curves + diversity tracking
+- Basic result summary (results.csv)
 
 Quick run:
     python fl_pso_pipeline.py
     python fl_pso_pipeline.py --help
-
-Authors: Elif Demir, Alpaslan Demirci (2026 pipeline for reproducibility)
 """
 import os
 import sys
 import time
-import json
-import math
-import hashlib
 import argparse
 import traceback
 from pathlib import Path
@@ -48,20 +40,16 @@ from scipy.stats import wilcoxon, friedmanchisquare, binomtest
 # ──────────────────────────────────────────────────────────────
 REPO_ROOT = Path(__file__).resolve().parent
 
-# Output directory (override with env var FLPSO_OUT_DIR)
 OUT_DIR = Path(os.environ.get("FLPSO_OUT_DIR", str(REPO_ROOT / "outputs")))
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Optional: where to look for Python CEC wrappers
 WRAPPER_DIR = Path(os.environ.get("FLPSO_WRAPPER_DIR", str(REPO_ROOT / "wrappers")))
 if WRAPPER_DIR.exists() and str(WRAPPER_DIR.resolve()) not in sys.path:
     sys.path.insert(0, str(WRAPPER_DIR.resolve()))
 
-# Optional: CEC input_data locations
 CEC2017_INPUT_DIR = Path(os.environ.get("FLPSO_CEC2017_INPUT", str(REPO_ROOT / "input_data/cec2017")))
 CEC2022_INPUT_DIR = Path(os.environ.get("FLPSO_CEC2022_INPUT", str(REPO_ROOT / "input_data/cec2022")))
 
-# Reproducibility globals
 GLOBAL_SEED = int(os.environ.get("FLPSO_GLOBAL_SEED", "2025"))
 FE_MULT_DEFAULT = int(os.environ.get("FLPSO_FE_MULT", "10000"))
 TAU_REL = float(os.environ.get("FLPSO_TAU_REL", "1e-6"))
@@ -69,17 +57,16 @@ TAU_ABS = float(os.environ.get("FLPSO_TAU_ABS", "1e-12"))
 
 
 def print_config():
-    """Show configuration at startup for reproducibility."""
     print("\n" + "="*70)
     print("FL-PSO Reproducible Pipeline")
     print("="*70)
-    print(f"REPO_ROOT          : {REPO_ROOT}")
-    print(f"OUT_DIR            : {OUT_DIR}")
-    print(f"WRAPPER_DIR        : {WRAPPER_DIR} (exists={WRAPPER_DIR.exists()})")
-    print(f"CEC2017_INPUT_DIR  : {CEC2017_INPUT_DIR} (exists={CEC2017_INPUT_DIR.exists()})")
-    print(f"CEC2022_INPUT_DIR  : {CEC2022_INPUT_DIR} (exists={CEC2022_INPUT_DIR.exists()})")
-    print(f"Global seed        : {GLOBAL_SEED}")
-    print(f"Default FE mult    : {FE_MULT_DEFAULT} × D")
+    print(f"REPO_ROOT              : {REPO_ROOT}")
+    print(f"OUT_DIR                : {OUT_DIR}")
+    print(f"WRAPPER_DIR            : {WRAPPER_DIR} (exists={WRAPPER_DIR.exists()})")
+    print(f"CEC2017_INPUT_DIR      : {CEC2017_INPUT_DIR} (exists={CEC2017_INPUT_DIR.exists()})")
+    print(f"CEC2022_INPUT_DIR      : {CEC2022_INPUT_DIR} (exists={CEC2022_INPUT_DIR.exists()})")
+    print(f"Global seed            : {GLOBAL_SEED}")
+    print(f"Default FE multiplier  : {FE_MULT_DEFAULT} × D")
     print("="*70 + "\n")
 
 
@@ -101,8 +88,7 @@ def ensure_dir(p: Path):
 
 def mean_centroid_diversity(X):
     c = X.mean(axis=0, keepdims=True)
-    d = np.linalg.norm(X - c, axis=1)
-    return float(d.mean())
+    return float(np.mean(np.linalg.norm(X - c, axis=1)))
 
 
 def stable_seed(suite_name, fid, tag, run_idx, base_seed=GLOBAL_SEED):
@@ -113,26 +99,25 @@ def stable_seed(suite_name, fid, tag, run_idx, base_seed=GLOBAL_SEED):
 
 
 # ──────────────────────────────────────────────────────────────
-# 3. SIMPLE BENCHMARK SUITE (extensible)
+# 3. BENCHMARK SUITE
 # ──────────────────────────────────────────────────────────────
 def suite_classical(D: int):
-    """Minimal classical test suite — easy to extend."""
     def sphere(x): return np.sum(x**2)
-    def rosenbrock(x): return np.sum(100*(x[1:]-x[:-1]**2)**2 + (1-x[:-1])**2)
-    def rastrigin(x): return 10*len(x) + np.sum(x**2 - 10*np.cos(2*np.pi*x))
+    def rosenbrock(x): return np.sum(100 * (x[1:] - x[:-1]**2)**2 + (1 - x[:-1])**2)
+    def rastrigin(x): return 10 * len(x) + np.sum(x**2 - 10 * np.cos(2 * np.pi * x))
 
-    lb = -100*np.ones(D)
-    ub =  100*np.ones(D)
+    lb = -100 * np.ones(D)
+    ub = 100 * np.ones(D)
 
     return [
-        {"fid": "F1",  "name": "Sphere",      "fun": sphere,      "lb": lb, "ub": ub, "fopt": 0.0},
-        {"fid": "F6",  "name": "Rosenbrock",  "fun": rosenbrock,  "lb": lb, "ub": ub, "fopt": 0.0},
-        {"fid": "F13", "name": "Rastrigin",   "fun": rastrigin,   "lb": lb, "ub": ub, "fopt": 0.0},
+        {"fid": "F1",  "name": "Sphere",     "fun": sphere,     "lb": lb, "ub": ub, "fopt": 0.0},
+        {"fid": "F6",  "name": "Rosenbrock", "fun": rosenbrock, "lb": lb, "ub": ub, "fopt": 0.0},
+        {"fid": "F13", "name": "Rastrigin",  "fun": rastrigin,  "lb": lb, "ub": ub, "fopt": 0.0},
     ]
 
 
 # ──────────────────────────────────────────────────────────────
-# 4. FL-PSO IMPLEMENTATION
+# 4. FL-PSO CORE
 # ──────────────────────────────────────────────────────────────
 @dataclass
 class StopState:
@@ -154,11 +139,10 @@ def fl_pso(
     eta: float = 0.08,
     track_div: bool = True
 ):
-    """Minimal FL-PSO with centroid-based residual correction."""
     r = rng(seed)
     D = lb.size
     X = r.uniform(lb, ub, (N, D))
-    V = np.zeros_like(X)
+    V = np.zeros((N, D))
 
     stop = StopState(fe_budget=fe_budget)
 
@@ -167,10 +151,11 @@ def fl_pso(
 
     P = X.copy()
     FP = FX.copy()
-    gbest = P[np.argmin(FP)].copy()
-    fg = FP.min()
+    gbest_idx = np.argmin(FP)
+    gbest = P[gbest_idx].copy()
+    fg = FP[gbest_idx]
 
-    curve = [fg]
+    curve = np.array([fg], dtype=float)
     div_curve = [] if track_div else None
 
     while stop.fe < stop.fe_budget:
@@ -180,17 +165,10 @@ def fl_pso(
         r1 = r.random((N, D))
         r2 = r.random((N, D))
 
-        # Centroid-based residual correction
         centroid = X.mean(axis=0, keepdims=True)
         residual = -(X - centroid)
 
-        V = (
-            w * V +
-            c1 * r1 * (P - X) +
-            c2 * r2 * (gbest - X) +
-            eta * residual
-        )
-
+        V = w * V + c1 * r1 * (P - X) + c2 * r2 * (gbest - X) + eta * residual
         X = clamp(X + V, lb, ub)
 
         FX = np.array([fun(x) for x in X])
@@ -200,17 +178,18 @@ def fl_pso(
         P[better] = X[better]
         FP[better] = FX[better]
 
-        best_idx = np.argmin(FP)
-        if FP[best_idx] < fg:
-            fg = FP[best_idx]
-            gbest = P[best_idx].copy()
+        new_best_idx = np.argmin(FP)
+        if FP[new_best_idx] < fg:
+            fg = FP[new_best_idx]
+            gbest = P[new_best_idx].copy()
 
-        curve.append(fg)
+        curve = np.append(curve, fg)
 
         if stop.fe >= stop.fe_budget:
             break
 
-    return gbest, fg, stop, np.array(curve), np.array(div_curve) if track_div else None
+    div_array = np.array(div_curve, dtype=float) if track_div else None
+    return gbest, fg, stop, curve, div_array
 
 
 # ──────────────────────────────────────────────────────────────
@@ -236,12 +215,10 @@ def run_suite(
         D = item["lb"].size
 
         fe_budget = FE_MULT_DEFAULT * D
-
         print(f"→ {fid} ({item['name']})  D={D}  FE={fe_budget:,}")
 
         for r in range(runs):
             seed = stable_seed("classical", fid, alg_name, r)
-
             t0 = time.perf_counter()
 
             try:
@@ -260,7 +237,7 @@ def run_suite(
                     "suite": "classical",
                     "fid": fid,
                     "D": D,
-                    "run": r+1,
+                    "run": r + 1,
                     "seed": seed,
                     "best": float(fb),
                     "success": success,
@@ -268,12 +245,12 @@ def run_suite(
                     "cpu_s": cpu_s,
                 })
 
-                # Save curve
+                # Save per-run curve
                 curve_df = pd.DataFrame({"step": range(len(curve)), "best": curve})
                 curve_df.to_csv(out_dir / f"curve__{fid}__run{r+1}.csv", index=False)
 
             except Exception as e:
-                print(f"  Error on run {r+1}: {e}")
+                print(f"  Error on {fid} run {r+1}: {type(e).__name__} - {e}")
                 traceback.print_exc()
 
     df = pd.DataFrame(results)
@@ -286,25 +263,35 @@ def run_suite(
 # 6. MAIN + ARGUMENT PARSER
 # ──────────────────────────────────────────────────────────────
 def parse_args():
-    parser = argparse.ArgumentParser(description="FL-PSO Reproducible Pipeline")
-    parser.add_argument("--output-dir", type=str, default=str(OUT_DIR),
-                        help="Output base directory")
-    parser.add_argument("--runs", type=int, default=30,
-                        help="Number of independent runs per function")
-    parser.add_argument("--pop-size", type=int, default=50,
-                        help="Population size (N)")
-    parser.add_argument("--no-diversity", action="store_true",
-                        help="Skip diversity tracking")
+    parser = argparse.ArgumentParser(
+        description="FL-PSO Reproducible Experimental Pipeline",
+        formatter_class=argparse.RawTextHelpFormatter
+    )
+    parser.add_argument(
+        "--output-dir", type=str, default=str(OUT_DIR),
+        help="Base output directory (default: ./outputs)"
+    )
+    parser.add_argument(
+        "--runs", type=int, default=30,
+        help="Number of independent runs per function (default: 30)"
+    )
+    parser.add_argument(
+        "--pop-size", type=int, default=50,
+        help="Population size N (default: 50)"
+    )
+    parser.add_argument(
+        "--no-diversity", action="store_true",
+        help="Skip tracking and saving diversity curves"
+    )
     return parser.parse_args()
 
 
 def main():
     print_config()
-
     args = parse_args()
-    out_dir = ensure_dir(Path(args.output_dir) / "classical")
 
-    print("Starting classical benchmark suite ...")
+    print("Starting classical benchmark suite...")
+    out_dir = ensure_dir(Path(args.output_dir) / "classical")
     suite = suite_classical(D=30)
 
     run_suite(
@@ -316,8 +303,8 @@ def main():
     )
 
     print("\n" + "="*70)
-    print("Experiment finished.")
-    print(f"Results → {out_dir}")
+    print("Experiment finished successfully.")
+    print(f"Results saved to: {out_dir}")
     print("="*70)
 
 
