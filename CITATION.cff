@@ -1,1 +1,8 @@
-
+@article{Demir2025,
+  author    = {Elif Demir and Yusuf Zeren and Suayip Toprakseven and Alpaslan Demirci},
+  title     = {Residual-Corrected Fractional–Langevin Particle Swarm Optimization},
+  journal   = {...},
+  year      = {2026},
+  doi       = {...},
+  note      = {Code available at: \url{https://github.com/elif1317/FL-PSO-Reproducible-Pipeline}}
+}
