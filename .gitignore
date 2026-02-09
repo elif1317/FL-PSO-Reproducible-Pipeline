@@ -1,29 +1,52 @@
-# Byte-compiled / optimized
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
+*.pyc
+*.pyo
+*.pyd
 
 # C extensions
 *.so
 *.dll
 *.dylib
 
-# Packaging
+# Packaging / distribution
 .Python
 build/
+develop-eggs/
 dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
 *.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
-# Environments
+# Environments & secrets
 .env
+.envrc
 .venv
 venv/
+ENV/
+env/
+env.bak/
+venv.bak/
 
-# IDEs
+# IDEs & editors
 .idea/
 .vscode/
+*.iml
+*.iws
 
-# Jupyter
+# Jupyter / notebooks
 .ipynb_checkpoints/
 
 # Large benchmark resources (not distributed)
@@ -31,8 +54,11 @@ input_data/
 wrappers/
 *.mat
 *.m
+*.zip
+*.tar.gz
+*.rar
 
-# Generated outputs (reproducible)
+# Generated outputs (reproducible results - never commit)
 outputs/
 results/
 curves/
@@ -40,16 +66,21 @@ diversity/
 stats/
 *.csv
 *.png
+*.jpg
+*.jpeg
 *.pdf
 *.json
 *.log
 
-# OS junk
+# OS / editor junk
 .DS_Store
 Thumbs.db
+Desktop.ini
+ehthumbs.db
 
-# Keep key files
+# Keep essential project files
 !fl_pso_pipeline.py
 !README.md
 !requirements.txt
+!LICENSE
 !.gitkeep
