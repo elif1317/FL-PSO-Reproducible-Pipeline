@@ -1,8 +1,8 @@
 # FL-PSO: Residual-Corrected Fractional–Langevin Particle Swarm Optimization
 
-Reproducible Experimental Pipeline
+**Reproducible Experimental Pipeline**
 
-This repository contains a single-file, fully reproducible experimental pipeline for the Residual-Corrected Fractional–Langevin Particle Swarm Optimization (FL-PSO) algorithm presented in the accompanying manuscript.
+This repository contains a **single-file**, fully reproducible experimental pipeline for the **Residual-Corrected Fractional–Langevin Particle Swarm Optimization (FL-PSO)** algorithm presented in the accompanying manuscript.
 
 The pipeline includes:
 - Classical benchmark functions
@@ -24,9 +24,5 @@ All numerical results reported in the paper can be reproduced under transparent 
 
 ## Requirements
 
-Install all dependencies with:
-
 ```bash
 pip install -r requirements.txt
-
-
