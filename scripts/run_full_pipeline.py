@@ -11,8 +11,8 @@ if str(ROOT) not in sys.path:
 # =========================
 # STANDARD LIBRARY IMPORTS
 # =========================
-import os
 import json
+import shutil
 import traceback
 from datetime import datetime
 
@@ -54,9 +54,54 @@ with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     CONFIG = yaml.safe_load(f)
 
 # =========================
+# CONFIG FIELDS
+# =========================
+GLOBAL_SEED = int(CONFIG.get("seed", 2025))
+RANDOM_SEED_MODE = str(CONFIG.get("random_seed_mode", "per_run")).lower()
+
+OUTPUT_ROOT = ROOT / CONFIG.get("output_dir", "results")
+EXPERIMENT_NAME = str(CONFIG.get("experiment_name", "default_run"))
+OVERWRITE_RESULTS = bool(CONFIG.get("overwrite_results", True))
+
+BENCHMARK_SUITE = str(CONFIG.get("benchmark_suite", "classical24")).lower()
+DIMENSIONS = list(CONFIG.get("dimensions", [10, 30, 50]))
+RUNS_SMALL = int(CONFIG.get("runs_small_dim", 30))
+RUNS_LARGE = int(CONFIG.get("runs_large_dim", 50))
+FE_MULT_DEFAULT = int(CONFIG.get("fe_multiplier", 10_000))
+
+BASELINE_ALGO = str(CONFIG.get("baseline_algorithm", "PSO"))
+SAVE_PLOTS = bool(CONFIG.get("save_plots", True))
+SAVE_STATISTICS = bool(CONFIG.get("save_statistics", True))
+SAVE_RUN_METADATA = bool(CONFIG.get("save_run_metadata", True))
+TRACK_DIVERSITY = bool(CONFIG.get("track_diversity", True))
+FAIL_ON_ERROR = bool(CONFIG.get("fail_on_error", False))
+
+SELECTED_BENCHMARKS = CONFIG.get("classical_benchmarks", [])
+PLOT_FORMAT = str(CONFIG.get("plot_format", "png")).lower()
+PLOT_DPI = int(CONFIG.get("plot_dpi", 200))
+
+STAT_WILCOXON = bool(CONFIG.get("statistics", {}).get("wilcoxon_against_baseline", True))
+SIGNIFICANCE_LEVEL = float(CONFIG.get("statistics", {}).get("significance_level", 0.05))
+
+VERBOSE = bool(CONFIG.get("logging", {}).get("verbose", True))
+SAVE_PER_RUN_CSV = bool(CONFIG.get("logging", {}).get("save_per_run_csv", True))
+SAVE_SUMMARY_CSV = bool(CONFIG.get("logging", {}).get("save_summary_csv", True))
+
+USE_SMALL_RUNS_FOR_ALL_DIMS = bool(CONFIG.get("runtime", {}).get("use_small_runs_for_all_dims", False))
+
+# =========================
 # OUTPUT PATHS
 # =========================
-OUT_DIR = ROOT / CONFIG.get("output_dir", "results")
+OUT_DIR = OUTPUT_ROOT / EXPERIMENT_NAME
+
+if OUT_DIR.exists() and OVERWRITE_RESULTS:
+    shutil.rmtree(OUT_DIR)
+elif OUT_DIR.exists() and not OVERWRITE_RESULTS:
+    raise RuntimeError(
+        f"Output directory already exists: {OUT_DIR}\n"
+        "Set overwrite_results: true to overwrite."
+    )
+
 CLASSICAL_DIR = OUT_DIR / "classical"
 ABLATION_DIR = OUT_DIR / "ablation"
 STAT_DIR = OUT_DIR / "statistics"
@@ -72,16 +117,6 @@ DATA_DIR = ROOT / "data"
 CEC2017_DIR = DATA_DIR / "cec2017"
 CEC2022_DIR = DATA_DIR / "cec2022"
 WRAPPER_DIR = DATA_DIR / "wrappers"
-
-# =========================
-# GLOBAL SETTINGS
-# =========================
-GLOBAL_SEED = int(CONFIG.get("seed", 2025))
-FE_MULT_DEFAULT = int(CONFIG.get("fe_multiplier", 10_000))
-DIMENSIONS = list(CONFIG.get("dimensions", [10, 30, 50]))
-RUNS_SMALL = int(CONFIG.get("runs_small_dim", 30))
-RUNS_LARGE = int(CONFIG.get("runs_large_dim", 50))
-BENCHMARK_SUITE = str(CONFIG.get("benchmark_suite", "classical24")).lower()
 
 # =========================
 # ALGORITHM CONFIG
@@ -153,10 +188,21 @@ def get_classical_benchmarks():
 # =========================
 # HELPERS
 # =========================
+def log(msg: str) -> None:
+    if VERBOSE:
+        print(msg)
+
 def set_global_seed(seed: int) -> None:
     np.random.seed(int(seed))
 
+def get_run_seed(dim: int, run_id: int) -> int:
+    if RANDOM_SEED_MODE == "fixed":
+        return GLOBAL_SEED
+    return GLOBAL_SEED + 1000 * dim + run_id
+
 def get_num_runs(dim: int) -> int:
+    if USE_SMALL_RUNS_FOR_ALL_DIMS:
+        return RUNS_SMALL
     return RUNS_SMALL if dim <= 30 else RUNS_LARGE
 
 def fe_budget_from_dim(dim: int) -> int:
@@ -189,7 +235,7 @@ def run_one_algorithm(algo_name, algo_callable, fun, lb, ub, fe_budget, seed):
             ub,
             fe_budget,
             seed=int(seed),
-            track_div=True
+            track_div=TRACK_DIVERSITY
         )
         return {
             "ok": True,
@@ -201,7 +247,7 @@ def run_one_algorithm(algo_name, algo_callable, fun, lb, ub, fe_budget, seed):
             "error": ""
         }
     except Exception as e:
-        return {
+        result = {
             "ok": False,
             "best_x": None,
             "best_f": np.nan,
@@ -210,17 +256,23 @@ def run_one_algorithm(algo_name, algo_callable, fun, lb, ub, fe_budget, seed):
             "div_curve": np.array([], dtype=float),
             "error": f"{type(e).__name__}: {e}"
         }
+        if FAIL_ON_ERROR:
+            raise RuntimeError(f"[{algo_name}] failed: {result['error']}") from e
+        return result
 
 def save_convergence_plot(curves_by_algo, out_path, title):
     plt.figure(figsize=(8, 5))
     plotted = False
+
     for algo_name, curves in curves_by_algo.items():
         valid = [np.asarray(c, dtype=float) for c in curves if len(c) > 0]
         if not valid:
             continue
+
         max_len = max(len(c) for c in valid)
         padded = np.vstack([safe_curve(c, target_len=max_len) for c in valid])
         mean_curve = np.nanmean(padded, axis=0)
+
         plt.plot(mean_curve, label=algo_name)
         plotted = True
 
@@ -231,12 +283,13 @@ def save_convergence_plot(curves_by_algo, out_path, title):
         plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
-    plt.savefig(out_path, dpi=200)
+    plt.savefig(out_path, dpi=PLOT_DPI)
     plt.close()
 
 def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
     rows = []
     grouped = df_runs.groupby(["benchmark", "dimension"])
+
     for (bench, dim), sub in grouped:
         pivot = sub.pivot_table(
             index="run",
@@ -244,13 +297,14 @@ def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
             values="best_f",
             aggfunc="first"
         )
+
         if baseline not in pivot.columns:
             continue
 
-        base_vals = pivot[baseline].dropna()
         for algo in pivot.columns:
             if algo == baseline:
                 continue
+
             pair = pd.concat([pivot[baseline], pivot[algo]], axis=1).dropna()
             if len(pair) < 3:
                 rows.append({
@@ -260,13 +314,19 @@ def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
                     "algorithm": algo,
                     "n": len(pair),
                     "p_value": np.nan,
+                    "significant": np.nan,
                     "median_diff": np.nan,
                     "better_than_baseline": np.nan
                 })
                 continue
 
             try:
-                stat = wilcoxon(pair.iloc[:, 0], pair.iloc[:, 1], zero_method="wilcox", alternative="two-sided")
+                stat = wilcoxon(
+                    pair.iloc[:, 0],
+                    pair.iloc[:, 1],
+                    zero_method="wilcox",
+                    alternative="two-sided"
+                )
                 median_diff = float(np.median(pair.iloc[:, 1] - pair.iloc[:, 0]))
                 rows.append({
                     "benchmark": bench,
@@ -275,6 +335,7 @@ def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
                     "algorithm": algo,
                     "n": len(pair),
                     "p_value": float(stat.pvalue),
+                    "significant": bool(stat.pvalue < SIGNIFICANCE_LEVEL),
                     "median_diff": median_diff,
                     "better_than_baseline": bool(median_diff < 0.0)
                 })
@@ -286,6 +347,7 @@ def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
                     "algorithm": algo,
                     "n": len(pair),
                     "p_value": np.nan,
+                    "significant": np.nan,
                     "median_diff": np.nan,
                     "better_than_baseline": np.nan
                 })
@@ -294,8 +356,9 @@ def compute_pairwise_wilcoxon(df_runs, baseline="PSO"):
 
 def dump_run_metadata():
     meta = {
-        "timestamp": datetime.utcnow().isoformat() + "Z",
+        "timestamp_utc": datetime.utcnow().isoformat() + "Z",
         "root": str(ROOT),
+        "config_path": str(CONFIG_PATH),
         "output_dir": str(OUT_DIR),
         "data_dir": str(DATA_DIR),
         "benchmark_suite": BENCHMARK_SUITE,
@@ -304,6 +367,17 @@ def dump_run_metadata():
         "runs_large_dim": RUNS_LARGE,
         "fe_multiplier": FE_MULT_DEFAULT,
         "global_seed": GLOBAL_SEED,
+        "random_seed_mode": RANDOM_SEED_MODE,
+        "baseline_algorithm": BASELINE_ALGO,
+        "save_plots": SAVE_PLOTS,
+        "save_statistics": SAVE_STATISTICS,
+        "save_run_metadata": SAVE_RUN_METADATA,
+        "track_diversity": TRACK_DIVERSITY,
+        "fail_on_error": FAIL_ON_ERROR,
+        "selected_benchmarks": SELECTED_BENCHMARKS,
+        "plot_format": PLOT_FORMAT,
+        "plot_dpi": PLOT_DPI,
+        "significance_level": SIGNIFICANCE_LEVEL,
         "algorithms": list(ALGORITHMS.keys()),
         "opfunu_available": bool(cec2017 is not None and cec2022 is not None),
     }
@@ -313,9 +387,18 @@ def dump_run_metadata():
 # =========================
 # MAIN PIPELINE
 # =========================
-def run_classical_suite():
+def get_filtered_classical_benchmarks():
     benchmarks = get_classical_benchmarks()
+    if SELECTED_BENCHMARKS:
+        benchmarks = [b for b in benchmarks if b["name"] in SELECTED_BENCHMARKS]
+    return benchmarks
+
+def run_classical_suite():
+    benchmarks = get_filtered_classical_benchmarks()
     all_rows = []
+
+    if not benchmarks:
+        raise RuntimeError("No classical benchmarks selected. Check 'classical_benchmarks' in the config.")
 
     for bench in benchmarks:
         bench_name = bench["name"]
@@ -323,24 +406,25 @@ def run_classical_suite():
         lb_scalar = bench["lb"]
         ub_scalar = bench["ub"]
 
-        print(f"\n{'=' * 70}")
-        print(f"[BENCHMARK] {bench_name}")
-        print(f"{'=' * 70}")
+        log(f"\n{'=' * 70}")
+        log(f"[BENCHMARK] {bench_name}")
+        log(f"{'=' * 70}")
 
         for dim in DIMENSIONS:
             n_runs = get_num_runs(dim)
             fe_budget = fe_budget_from_dim(dim)
             lb, ub = make_bounds(lb_scalar, ub_scalar, dim)
 
-            print(f"[INFO] Dimension={dim}, Runs={n_runs}, FE budget={fe_budget}")
+            log(f"[INFO] Dimension={dim}, Runs={n_runs}, FE budget={fe_budget}")
 
             curves_by_algo = {algo_name: [] for algo_name in ALGORITHMS.keys()}
 
             for run_id in range(n_runs):
-                run_seed = GLOBAL_SEED + 1000 * dim + run_id
+                run_seed = get_run_seed(dim, run_id)
 
                 for algo_name, algo_callable in ALGORITHMS.items():
-                    print(f"  -> {algo_name:15s} | run {run_id + 1:02d}/{n_runs}", end="")
+                    if VERBOSE:
+                        print(f"  -> {algo_name:15s} | run {run_id + 1:02d}/{n_runs}", end="")
 
                     result = run_one_algorithm(
                         algo_name=algo_name,
@@ -367,24 +451,28 @@ def run_classical_suite():
 
                     if result["ok"]:
                         curves_by_algo[algo_name].append(result["curve"])
-                        print(f" | best={result['best_f']:.6e}")
+                        if VERBOSE:
+                            print(f" | best={result['best_f']:.6e}")
                     else:
-                        print(f" | FAILED ({result['error']})")
+                        if VERBOSE:
+                            print(f" | FAILED ({result['error']})")
 
             df_dim = pd.DataFrame([
                 r for r in all_rows
                 if r["benchmark"] == bench_name and r["dimension"] == dim
             ])
 
-            dim_csv = CLASSICAL_DIR / f"{bench_name}_D{dim}_runs.csv"
-            df_dim.to_csv(dim_csv, index=False)
+            if SAVE_PER_RUN_CSV:
+                dim_csv = CLASSICAL_DIR / f"{bench_name}_D{dim}_runs.csv"
+                df_dim.to_csv(dim_csv, index=False)
 
-            plot_path = PLOT_DIR / f"{bench_name}_D{dim}_convergence.png"
-            save_convergence_plot(
-                curves_by_algo=curves_by_algo,
-                out_path=plot_path,
-                title=f"{bench_name} (D={dim})"
-            )
+            if SAVE_PLOTS:
+                plot_path = PLOT_DIR / f"{bench_name}_D{dim}_convergence.{PLOT_FORMAT}"
+                save_convergence_plot(
+                    curves_by_algo=curves_by_algo,
+                    out_path=plot_path,
+                    title=f"{bench_name} (D={dim})"
+                )
 
     return pd.DataFrame(all_rows)
 
@@ -417,8 +505,9 @@ def main():
 
     print("\n[INFO] Paths")
     print(f"ROOT: {ROOT}")
-    print(f"OUTPUT: {OUT_DIR}")
     print(f"CONFIG: {CONFIG_PATH}")
+    print(f"OUTPUT ROOT: {OUTPUT_ROOT}")
+    print(f"EXPERIMENT OUT: {OUT_DIR}")
     print(f"CEC2017_DIR: {CEC2017_DIR}")
     print(f"CEC2022_DIR: {CEC2022_DIR}")
 
@@ -436,7 +525,8 @@ def main():
     print("\n[INFO] Loaded config:")
     print(json.dumps(CONFIG, indent=2))
 
-    dump_run_metadata()
+    if SAVE_RUN_METADATA:
+        dump_run_metadata()
 
     try:
         if BENCHMARK_SUITE.startswith("classical"):
@@ -447,21 +537,30 @@ def main():
             df_runs = run_classical_suite()
 
         runs_csv = CLASSICAL_DIR / "all_runs.csv"
-        df_runs.to_csv(runs_csv, index=False)
+        if SAVE_PER_RUN_CSV:
+            df_runs.to_csv(runs_csv, index=False)
 
         df_summary = build_summary(df_runs)
         summary_csv = CLASSICAL_DIR / "summary.csv"
-        df_summary.to_csv(summary_csv, index=False)
+        if SAVE_SUMMARY_CSV:
+            df_summary.to_csv(summary_csv, index=False)
 
-        df_wil = compute_pairwise_wilcoxon(df_runs, baseline="PSO")
-        wil_csv = STAT_DIR / "wilcoxon_vs_pso.csv"
-        df_wil.to_csv(wil_csv, index=False)
+        if SAVE_STATISTICS and STAT_WILCOXON:
+            df_wil = compute_pairwise_wilcoxon(df_runs, baseline=BASELINE_ALGO)
+            wil_csv = STAT_DIR / f"wilcoxon_vs_{BASELINE_ALGO.lower()}.csv"
+            df_wil.to_csv(wil_csv, index=False)
+        else:
+            wil_csv = None
 
         print("\n[SUCCESS] Pipeline completed successfully.")
-        print(f"[OUTPUT] Per-run results : {runs_csv}")
-        print(f"[OUTPUT] Summary         : {summary_csv}")
-        print(f"[OUTPUT] Statistics      : {wil_csv}")
-        print(f"[OUTPUT] Plots folder     : {PLOT_DIR}")
+        if SAVE_PER_RUN_CSV:
+            print(f"[OUTPUT] Per-run results : {runs_csv}")
+        if SAVE_SUMMARY_CSV:
+            print(f"[OUTPUT] Summary         : {summary_csv}")
+        if wil_csv is not None:
+            print(f"[OUTPUT] Statistics      : {wil_csv}")
+        if SAVE_PLOTS:
+            print(f"[OUTPUT] Plots folder     : {PLOT_DIR}")
 
     except Exception as e:
         print("\n[ERROR] Pipeline failed.")
