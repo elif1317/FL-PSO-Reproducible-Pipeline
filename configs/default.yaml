@@ -1,7 +1,41 @@
 seed: 2025
 output_dir: results
+
 benchmark_suite: classical24
 dimensions: [10, 30, 50]
+
 runs_small_dim: 30
 runs_large_dim: 50
 fe_multiplier: 10000
+
+baseline_algorithm: PSO
+save_plots: true
+save_statistics: true
+save_run_metadata: true
+track_diversity: true
+fail_on_error: false
+
+classical_benchmarks:
+  - Sphere
+  - Rastrigin
+  - Rosenbrock
+  - Ackley
+  - Griewank
+  - Zakharov
+  - Schwefel12
+  - Levy
+
+plot_format: png
+plot_dpi: 200
+
+statistics:
+  wilcoxon_against_baseline: true
+  significance_level: 0.05
+
+logging:
+  verbose: true
+  save_per_run_csv: true
+  save_summary_csv: true
+
+runtime:
+  use_small_runs_for_all_dims: false
