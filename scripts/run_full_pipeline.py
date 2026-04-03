@@ -42,8 +42,8 @@ except Exception:
 # =========================
 from src.flpso.optimizers import *
 from src.flpso.config import get_algorithms
-# from src.flpso.cec import *          # CEC modülünü tam entegre edince aç
-# from src.flpso.benchmarks import *   # benchmarks.py'yi en son entegre edeceğiz
+# from src.flpso.cec import *
+# from src.flpso.benchmarks import *
 
 # =========================
 # MATPLOTLIB SETTINGS
@@ -77,3 +77,39 @@ TAU_ABS = 1e-12
 # ALGORITHM CONFIG
 # =========================
 ALGORITHMS = get_algorithms()
+
+
+# =========================
+# MAIN ENTRY POINT
+# =========================
+def main():
+    print("=" * 50)
+    print("FL-PSO REPRODUCIBLE PIPELINE")
+    print("=" * 50)
+
+    # basic system info
+    print("\n[INFO] Paths")
+    print(f"ROOT: {ROOT}")
+    print(f"OUTPUT: {OUT_DIR}")
+    print(f"CEC2017_DIR: {CEC2017_DIR}")
+    print(f"CEC2022_DIR: {CEC2022_DIR}")
+
+    # algorithms
+    print("\n[INFO] Algorithms loaded:")
+    for name in ALGORITHMS.keys():
+        print(f" - {name}")
+
+    # external packages
+    print("\n[INFO] External dependencies:")
+    print(f"opfunu available: {cec2017 is not None and cec2022 is not None}")
+
+    # seed test
+    np.random.seed(GLOBAL_SEED)
+    test_rand = np.random.rand()
+    print(f"\n[INFO] Seed test value: {test_rand:.6f}")
+
+    print("\n[SUCCESS] Pipeline initialized successfully.")
+
+
+if __name__ == "__main__":
+    main()
