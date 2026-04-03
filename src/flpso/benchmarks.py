@@ -1,6 +1,150 @@
 import math
 import numpy as np
 
+
+# =========================
+# ENGINEERING / CONSTRAINED
+# =========================
+
+def penalty(f, g_ineq, h_eq=None, rho=1e6):
+    """
+    f: objective
+    g_ineq(x) <= 0 constraints list/array
+    h_eq(x) == 0 constraints list/array (optional)
+    """
+    def F(x):
+        x = np.asarray(x, float)
+        fx = float(f(x))
+        g = np.asarray(g_ineq(x), float)
+        viol = np.maximum(g, 0.0)
+        pen = rho * np.sum(viol ** 2)
+        if h_eq is not None:
+            h = np.asarray(h_eq(x), float)
+            pen += rho * np.sum(h ** 2)
+        return fx + pen
+    return F
+
+
+def suite_engineering():
+    funs = []
+
+    # 1) Tension/Compression Spring
+    def f_spring(x):
+        x1, x2, x3 = x
+        return (x3 + 2.0) * x2 * (x1 ** 2)
+
+    def g_spring(x):
+        x1, x2, x3 = x
+        g1 = 1 - (x2 ** 3 * x3) / (71785 * (x1 ** 4))
+        g2 = (4 * x2 ** 2 - x1 * x2) / (12566 * (x2 * x1 ** 3 - x1 ** 4)) + 1 / (5108 * x1 ** 2) - 1
+        g3 = 1 - (140.45 * x1) / (x2 ** 2 * x3)
+        g4 = (x2 + x1) / 1.5 - 1
+        return [g1, g2, g3, g4]
+
+    lb = np.array([0.05, 0.25, 2.0])
+    ub = np.array([2.0, 1.3, 15.0])
+    funs.append(dict(
+        fid="ENG1", name="Spring Design (penalty)", fun=penalty(f_spring, g_spring),
+        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=3
+    ))
+
+    # 2) Pressure Vessel
+    def f_pv(x):
+        x1, x2, x3, x4 = x
+        return 0.6224 * x1 * x3 * x4 + 1.7781 * x2 * (x3 ** 2) + 3.1661 * (x1 ** 2) * x4 + 19.84 * (x1 ** 2) * x3
+
+    def g_pv(x):
+        x1, x2, x3, x4 = x
+        return [
+            0.0193 * x3 - x1,
+            0.00954 * x3 - x2,
+            (math.pi * (x3 ** 2) * x4 + (4 / 3) * math.pi * (x3 ** 3)) - 1296000,
+            x4 - 240
+        ]
+
+    lb = np.array([0.0625, 0.0625, 10.0, 10.0])
+    ub = np.array([5.0, 5.0, 200.0, 240.0])
+    funs.append(dict(
+        fid="ENG2", name="Pressure Vessel (penalty)", fun=penalty(f_pv, g_pv),
+        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=4
+    ))
+
+    # 3) Welded Beam
+    def f_wb(x):
+        h, l, t, b = x
+        return 1.10471 * h * h * l + 0.04811 * t * b * (14.0 + l)
+
+    def g_wb(x):
+        h, l, t, b = x
+        P = 6000.0
+        L = 14.0
+        E = 30e6
+        G = 12e6
+        tau_max = 13600.0
+        sigma_max = 30000.0
+        delta_max = 0.25
+        M = P * (L + l / 2.0)
+        R = math.sqrt((l ** 2) / 4.0 + ((h + t) / 2.0) ** 2)
+        J = 2 * math.sqrt(2) * h * l * ((l ** 2) / 12.0 + ((h + t) / 2.0) ** 2)
+        tau_p = P / (math.sqrt(2) * h * l)
+        tau_pp = M * R / J
+        tau = math.sqrt(tau_p ** 2 + 2 * tau_p * tau_pp * l / (2 * R) + tau_pp ** 2)
+        sigma = 6 * P * L / (b * (t ** 2))
+        delta = 4 * P * (L ** 3) / (E * b * (t ** 3))
+        Pc = (4.013 * E * math.sqrt((t ** 2) * (b ** 6) / 36.0) / (L ** 2)) * (1 - t / (2 * L) * math.sqrt(E / (4 * G)))
+        return [
+            tau - tau_max,
+            sigma - sigma_max,
+            h - b,
+            0.10471 * h * h + 0.04811 * t * b * (14 + l) - 5.0,
+            0.125 - h,
+            delta - delta_max,
+            P - Pc
+        ]
+
+    lb = np.array([0.1, 0.1, 0.1, 0.1])
+    ub = np.array([2.0, 10.0, 10.0, 2.0])
+    funs.append(dict(
+        fid="ENG3", name="Welded Beam (penalty)", fun=penalty(f_wb, g_wb),
+        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=4
+    ))
+
+    # 4) Speed Reducer
+    def f_sr(x):
+        x1, x2, x3, x4, x5, x6, x7 = x
+        return (
+            0.7854 * x1 * x2 ** 2 * (3.3333 * x3 ** 2 + 14.9334 * x3 - 43.0934)
+            - 1.508 * x1 * (x6 ** 2 + x7 ** 2)
+            + 7.4777 * (x6 ** 3 + x7 ** 3)
+            + 0.7854 * (x4 * x6 ** 2 + x5 * x7 ** 2)
+        )
+
+    def g_sr(x):
+        x1, x2, x3, x4, x5, x6, x7 = x
+        return [
+            27 / (x1 * x2 ** 2 * x3) - 1,
+            397.5 / (x1 * x2 ** 2 * x3 ** 2) - 1,
+            1.93 * x4 ** 3 / (x2 * x3 * x6 ** 4) - 1,
+            1.93 * x5 ** 3 / (x2 * x3 * x7 ** 4) - 1,
+            (1 / (110 * x6 ** 3)) * math.sqrt((745 * x4 / (x2 * x3)) ** 2 + 16.9e6) - 1,
+            (1 / (85 * x7 ** 3)) * math.sqrt((745 * x5 / (x2 * x3)) ** 2 + 157.5e6) - 1,
+            x2 * x3 / 40 - 1,
+            5 * x2 / x1 - 1,
+            x1 / (12 * x2) - 1,
+            (1.5 * x6 + 1.9) / x4 - 1,
+            (1.1 * x7 + 1.9) / x5 - 1
+        ]
+
+    lb = np.array([2.6, 0.7, 17.0, 7.3, 7.3, 2.9, 5.0])
+    ub = np.array([3.6, 0.8, 28.0, 8.3, 8.3, 3.9, 5.5])
+    funs.append(dict(
+        fid="ENG4", name="Speed Reducer (penalty)", fun=penalty(f_sr, g_sr),
+        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=7
+    ))
+
+    return funs
+
+
 # =========================
 # CLASSICAL 24 BENCHMARKS
 # =========================
@@ -178,146 +322,4 @@ def suite_classical24(D):
     funs += [wrap(lambda x: shekel_core(np.asarray(x, float), 5),  0, 10, "F22", "Shekel-5", Dfix=4)]
     funs += [wrap(lambda x: shekel_core(np.asarray(x, float), 7),  0, 10, "F23", "Shekel-7", Dfix=4)]
     funs += [wrap(lambda x: shekel_core(np.asarray(x, float), 10), 0, 10, "F24", "Shekel-10", Dfix=4)]
-    return funs
-
-
-# =========================
-# ENGINEERING / CONSTRAINED
-# =========================
-
-def penalty(f, g_ineq, h_eq=None, rho=1e6):
-    """
-    f: objective
-    g_ineq(x) <= 0 constraints list/array
-    h_eq(x) == 0 constraints list/array (optional)
-    """
-    def F(x):
-        x = np.asarray(x, float)
-        fx = float(f(x))
-        g = np.asarray(g_ineq(x), float)
-        viol = np.maximum(g, 0.0)
-        pen = rho * np.sum(viol ** 2)
-        if h_eq is not None:
-            h = np.asarray(h_eq(x), float)
-            pen += rho * np.sum(h ** 2)
-        return fx + pen
-    return F
-
-def suite_engineering():
-    funs = []
-
-    # 1) Tension/Compression Spring
-    def f_spring(x):
-        x1, x2, x3 = x
-        return (x3 + 2.0) * x2 * (x1 ** 2)
-
-    def g_spring(x):
-        x1, x2, x3 = x
-        g1 = 1 - (x2 ** 3 * x3) / (71785 * (x1 ** 4))
-        g2 = (4 * x2 ** 2 - x1 * x2) / (12566 * (x2 * x1 ** 3 - x1 ** 4)) + 1 / (5108 * x1 ** 2) - 1
-        g3 = 1 - (140.45 * x1) / (x2 ** 2 * x3)
-        g4 = (x2 + x1) / 1.5 - 1
-        return [g1, g2, g3, g4]
-
-    lb = np.array([0.05, 0.25, 2.0])
-    ub = np.array([2.0, 1.3, 15.0])
-    funs.append(dict(
-        fid="ENG1", name="Spring Design (penalty)", fun=penalty(f_spring, g_spring),
-        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=3
-    ))
-
-    # 2) Pressure Vessel
-    def f_pv(x):
-        x1, x2, x3, x4 = x
-        return 0.6224 * x1 * x3 * x4 + 1.7781 * x2 * (x3 ** 2) + 3.1661 * (x1 ** 2) * x4 + 19.84 * (x1 ** 2) * x3
-
-    def g_pv(x):
-        x1, x2, x3, x4 = x
-        return [
-            0.0193 * x3 - x1,
-            0.00954 * x3 - x2,
-            (math.pi * (x3 ** 2) * x4 + (4 / 3) * math.pi * (x3 ** 3)) - 1296000,
-            x4 - 240
-        ]
-
-    lb = np.array([0.0625, 0.0625, 10.0, 10.0])
-    ub = np.array([5.0, 5.0, 200.0, 240.0])
-    funs.append(dict(
-        fid="ENG2", name="Pressure Vessel (penalty)", fun=penalty(f_pv, g_pv),
-        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=4
-    ))
-
-    # 3) Welded Beam
-    def f_wb(x):
-        h, l, t, b = x
-        return 1.10471 * h * h * l + 0.04811 * t * b * (14.0 + l)
-
-    def g_wb(x):
-        h, l, t, b = x
-        P = 6000.0
-        L = 14.0
-        E = 30e6
-        G = 12e6
-        tau_max = 13600.0
-        sigma_max = 30000.0
-        delta_max = 0.25
-        M = P * (L + l / 2.0)
-        R = math.sqrt((l ** 2) / 4.0 + ((h + t) / 2.0) ** 2)
-        J = 2 * math.sqrt(2) * h * l * ((l ** 2) / 12.0 + ((h + t) / 2.0) ** 2)
-        tau_p = P / (math.sqrt(2) * h * l)
-        tau_pp = M * R / J
-        tau = math.sqrt(tau_p ** 2 + 2 * tau_p * tau_pp * l / (2 * R) + tau_pp ** 2)
-        sigma = 6 * P * L / (b * (t ** 2))
-        delta = 4 * P * (L ** 3) / (E * b * (t ** 3))
-        Pc = (4.013 * E * math.sqrt((t ** 2) * (b ** 6) / 36.0) / (L ** 2)) * (1 - t / (2 * L) * math.sqrt(E / (4 * G)))
-        return [
-            tau - tau_max,
-            sigma - sigma_max,
-            h - b,
-            0.10471 * h * h + 0.04811 * t * b * (14 + l) - 5.0,
-            0.125 - h,
-            delta - delta_max,
-            P - Pc
-        ]
-
-    lb = np.array([0.1, 0.1, 0.1, 0.1])
-    ub = np.array([2.0, 10.0, 10.0, 2.0])
-    funs.append(dict(
-        fid="ENG3", name="Welded Beam (penalty)", fun=penalty(f_wb, g_wb),
-        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=4
-    ))
-
-    # 4) Speed Reducer
-    def f_sr(x):
-        x1, x2, x3, x4, x5, x6, x7 = x
-        return (
-            0.7854 * x1 * x2 ** 2 * (3.3333 * x3 ** 2 + 14.9334 * x3 - 43.0934)
-            - 1.508 * x1 * (x6 ** 2 + x7 ** 2)
-            + 7.4777 * (x6 ** 3 + x7 ** 3)
-            + 0.7854 * (x4 * x6 ** 2 + x5 * x7 ** 2)
-        )
-
-    def g_sr(x):
-        x1, x2, x3, x4, x5, x6, x7 = x
-        return [
-            27 / (x1 * x2 ** 2 * x3) - 1,
-            397.5 / (x1 * x2 ** 2 * x3 ** 2) - 1,
-            1.93 * x4 ** 3 / (x2 * x3 * x6 ** 4) - 1,
-            1.93 * x5 ** 3 / (x2 * x3 * x7 ** 4) - 1,
-            (1 / (110 * x6 ** 3)) * math.sqrt((745 * x4 / (x2 * x3)) ** 2 + 16.9e6) - 1,
-            (1 / (85 * x7 ** 3)) * math.sqrt((745 * x5 / (x2 * x3)) ** 2 + 157.5e6) - 1,
-            x2 * x3 / 40 - 1,
-            5 * x2 / x1 - 1,
-            x1 / (12 * x2) - 1,
-            (1.5 * x6 + 1.9) / x4 - 1,
-            (1.1 * x7 + 1.9) / x5 - 1
-        ]
-
-    lb = np.array([2.6, 0.7, 17.0, 7.3, 7.3, 2.9, 5.0])
-    ub = np.array([3.6, 0.8, 28.0, 8.3, 8.3, 3.9, 5.5])
-    funs.append(dict(
-        fid="ENG4", name="Speed Reducer (penalty)", fun=penalty(f_sr, g_sr),
-        lb=lb, ub=ub, fopt=None, suite="ENGINEERING", D=7
-    ))
-
     return funs
