@@ -2,14 +2,14 @@
 
 This repository contains the experimental pipeline for **Residual-Corrected Fractional-Langevin Particle Swarm Optimization (FL-PSO)**.
 
-The repository is being reorganized into a cleaner and more reproducible structure for:
+It includes:
 - benchmark experiments,
 - ablation studies,
 - sensitivity analyses,
 - engineering optimization cases,
 - and multi-objective case studies.
 
-## Planned Repository Structure
+## Repository Structure
 
 ```text
 FL-PSO-Reproducible-Pipeline/
