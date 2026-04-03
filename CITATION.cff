@@ -1,6 +1,7 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it as below."
-title: "Residual-guided Fractional-Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization"
+message: "If you use this code, please cite the associated article."
+title: "FL-PSO Reproducible Pipeline"
+version: "1.0.0"
 
 authors:
   - family-names: "Demir"
@@ -12,7 +13,13 @@ authors:
   - family-names: "Demirci"
     given-names: "Alpaslan"
 
-journal: "Swarm and Evolutionary Computation"
-year: 2026
-volume: 104
-doi: "10.1016/j.swevo.2026.102367"
+date-released: 2026-04-03
+url: "https://github.com/elif1317/FL-PSO-Reproducible-Pipeline"
+
+preferred-citation:
+  type: article
+  title: "Residual-guided Fractional-Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization"
+  journal: "Swarm and Evolutionary Computation"
+  year: 2026
+  volume: 104
+  doi: "10.1016/j.swevo.2026.102367"
