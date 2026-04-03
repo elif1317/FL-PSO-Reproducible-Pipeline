@@ -1,86 +1,37 @@
-# Byte-compiled / optimized / DLL files
+# Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.pyc
-*.pyo
-*.pyd
-
-# C extensions
 *.so
-*.dll
-*.dylib
 
-# Packaging / distribution
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# Environments & secrets
-.env
-.envrc
-.venv
+# Virtual environments
 venv/
-ENV/
+.venv/
 env/
-env.bak/
-venv.bak/
 
-# IDEs & editors
-.idea/
+# IDE
 .vscode/
-*.iml
-*.iws
+.idea/
 
-# Jupyter / notebooks
-.ipynb_checkpoints/
-
-# Large benchmark resources (not distributed)
-input_data/
-wrappers/
-*.mat
-*.m
-*.zip
-*.tar.gz
-*.rar
-
-# Generated outputs (reproducible results - never commit)
-outputs/
-results/
-curves/
-diversity/
-stats/
-*.csv
-*.png
-*.jpg
-*.jpeg
-*.pdf
-*.json
-*.log
-
-# OS / editor junk
+# OS
 .DS_Store
 Thumbs.db
-Desktop.ini
-ehthumbs.db
 
-# Keep essential project files
-!fl_pso_pipeline.py
-!README.md
-!requirements.txt
-!LICENSE
-!.gitkeep
+# Outputs
+results/
+outputs/
+artifacts/
+logs/
+figures/generated/
+tables/generated/
+cache/
+tmp/
+
+# Benchmark data
+data/
+input_data/
+
+# Large files
+*.zip
+*.tar
+*.npy
+*.mat
