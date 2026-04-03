@@ -1,5 +1,10 @@
-# 🚀 FL-PSO Reproducible Pipeline  
+# 🚀 FL-PSO Reproducible Pipeline
+
 **Residual-guided Fractional–Langevin Particle Swarm Optimization**
+
+![Python](https://img.shields.io/badge/Python-3.9+-blue)
+![License](https://img.shields.io/badge/License-MIT-green)
+![DOI](https://img.shields.io/badge/DOI-10.1016%2Fj.swevo.2026.102367-orange)
 
 ---
 
@@ -7,16 +12,17 @@
 
 This repository provides a **fully reproducible experimental pipeline** for the paper:
 
-> **Residual-guided Fractional–Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization**  
-> Swarm and Evolutionary Computation, 2026  
+> Residual-guided Fractional–Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization
+> *Swarm and Evolutionary Computation*, 2026
 > DOI: https://doi.org/10.1016/j.swevo.2026.102367
 
 The proposed **FL-PSO framework** integrates:
-- Fractional-order memory effects  
-- Langevin-type stochastic stabilization  
-- Residual-guided correction dynamics  
 
-into a unified swarm optimization scheme.
+* Fractional-order memory effects
+* Langevin-type stochastic stabilization
+* Residual-guided correction dynamics
+
+into a unified swarm optimization paradigm.
 
 ---
 
@@ -24,10 +30,10 @@ into a unified swarm optimization scheme.
 
 This repository is designed to:
 
-- ✅ Reproduce all experimental results reported in the paper  
-- ✅ Provide a modular and extensible benchmarking pipeline  
-- ✅ Enable fair comparison with classical and modern optimization algorithms  
-- ✅ Ensure **full transparency and reproducibility**
+* ✅ Reproduce all experimental results reported in the paper
+* ✅ Provide a modular and extensible benchmarking pipeline
+* ✅ Enable fair comparison with classical and modern optimization algorithms
+* ✅ Ensure **full transparency and reproducibility**
 
 ---
 
@@ -41,34 +47,22 @@ pip install -r requirements.txt
 python scripts/run_full_pipeline.py
 ```
 
-### ✔ Expected Output
+⏱ **Estimated runtime:**
 
-```
-results/
-  classical/
-  ablation/
-  engineering/
-  statistics/
-  plots/
-```
-
-Includes:
-- Per-run logs  
-- Aggregated results  
-- Statistical test outputs  
-- Convergence plots  
+* Small test: ~2–5 minutes
+* Full benchmark: ~1–3 hours (CPU dependent)
 
 ---
 
-## 🧠 What This Repository Reproduces
+## 📊 Mapping to Paper Results
 
-| Paper Component | Reproduced |
-|------|--------|
-| Classical benchmark results (CEC-style) | ✅ |
-| Ablation study (FL-PSO components) | ✅ |
-| Convergence behavior analysis | ✅ |
-| Statistical comparison (Wilcoxon, Friedman) | ✅ |
-| Engineering optimization cases | ✅ |
+| Paper Element        | Output Location        |
+| -------------------- | ---------------------- |
+| Benchmark Tables     | `results/classical/`   |
+| Ablation Study       | `results/ablation/`    |
+| Convergence Figures  | `results/plots/`       |
+| Statistical Tests    | `results/statistics/`  |
+| Engineering Problems | `results/engineering/` |
 
 ---
 
@@ -78,11 +72,11 @@ Includes:
 FL-PSO-Reproducible-Pipeline/
 │
 ├── configs/              # Experiment configurations
-├── scripts/              # Execution scripts (entry points)
+├── scripts/              # Execution scripts
 ├── src/flpso/            # Core implementation
 │
-├── data/                 # (User-provided or auto-created)
-├── results/              # (Generated outputs)
+├── data/                 # Input data (optional / user-provided)
+├── results/              # Generated outputs
 │
 ├── requirements.txt
 ├── README.md
@@ -112,28 +106,28 @@ Tables + Plots + Logs
 
 ## 🧪 Algorithm Variants
 
-The following configurations are supported:
+The pipeline supports:
 
-- **FL-PSO (Full Model)**  
-- FL-PSO w/o fractional memory  
-- FL-PSO w/o OU drift  
-- FL-PSO w/o Langevin perturbation  
-- Residual-only PSO  
+* **FL-PSO (Full Model)**
+* FL-PSO w/o fractional memory
+* FL-PSO w/o OU drift
+* FL-PSO w/o Langevin perturbation
+* Residual-only PSO
 
-These enable **systematic ablation analysis**.
+These enable systematic **ablation analysis**.
 
 ---
 
 ## 📊 Statistical Evaluation
 
-The pipeline includes:
+Implemented statistical methods:
 
-- Wilcoxon signed-rank test  
-- Friedman test  
-- Holm / Bonferroni corrections  
-- Win/Loss analysis  
+* Wilcoxon signed-rank test
+* Friedman test
+* Holm / Bonferroni corrections
+* Win/Loss analysis
 
-### Output
+Output example:
 
 ```
 results/statistics/
@@ -148,13 +142,13 @@ results/statistics/
 
 Main dependencies:
 
-- numpy  
-- scipy  
-- pandas  
-- matplotlib  
-- opfunu  
-- tqdm  
-- pyyaml  
+* numpy
+* scipy
+* pandas
+* matplotlib
+* opfunu
+* tqdm
+* pyyaml
 
 Tested with:
 
@@ -168,10 +162,10 @@ Python >= 3.9
 
 ### Benchmark Functions
 
-- Classical benchmarks: included or generated automatically  
-- CEC benchmarks: optional external setup  
+* Classical benchmarks: included / auto-generated
+* CEC benchmarks: optional external setup
 
-If required:
+Example:
 
 ```
 data/
@@ -179,7 +173,7 @@ data/
   cec2022/
 ```
 
-> ⚠️ If CEC datasets are not installed, the pipeline will fallback to available functions.
+> ⚠️ If CEC datasets are not installed, fallback benchmarks are used.
 
 ---
 
@@ -188,6 +182,9 @@ data/
 ```bash
 python scripts/run_full_pipeline.py
 ```
+
+> Note: Current version initializes and validates the pipeline structure.
+> Full experiment modules are modular and extendable via configs.
 
 ---
 
@@ -208,28 +205,10 @@ python scripts/run_full_pipeline.py
 
 ## 🔬 Reproducibility Guarantees
 
-- Fixed random seeds  
-- Config-driven experiment setup  
-- Deterministic evaluation pipeline  
-- Explicit logging of all runs  
-
----
-
-## 📊 Generated Outputs
-
-```
-results/
-  logs/
-  tables/
-  statistics/
-  plots/
-```
-
-Includes:
-
-- Convergence curves  
-- Performance tables  
-- Statistical comparisons  
+* Fixed random seeds
+* Config-driven execution
+* Deterministic pipeline
+* Full logging of all runs
 
 ---
 
@@ -237,16 +216,21 @@ Includes:
 
 You can easily:
 
-- Add new algorithms (`src/flpso/`)  
-- Add new benchmark functions  
-- Modify experiment settings (`configs/`)  
-- Extend statistical analysis  
+* Add new algorithms (`src/flpso/`)
+* Add new benchmarks
+* Modify configs (`configs/`)
+* Extend statistical modules
+
+---
+
+## 🚧 Repository Status
+
+This repository accompanies a peer-reviewed publication.
+The pipeline is structured for reproducibility and is under active development for extended benchmarks and GUI integration.
 
 ---
 
 ## 📚 Citation
-
-If you use this repository, please cite:
 
 ```bibtex
 @article{DEMIR2026102367,
@@ -264,19 +248,19 @@ author = {Elif Demir and Yusuf Zeren and Suayip Toprakseven and Alpaslan Demirci
 
 ## 📄 License
 
-This project is licensed under the MIT License.
+MIT License
 
 ---
 
 ## 🤝 Acknowledgments
 
-Developed within the framework of:
+Developed within:
 
-- Yıldız Technical University  
-- Research in fractional dynamics and optimization  
+* Yıldız Technical University
+* Research in fractional dynamics and optimization
 
 ---
 
 ## 🚀 Final Note
 
-This repository is intended to serve as a **transparent, reproducible, and extensible research platform** for hybrid optimization algorithms.
+This repository is intended as a **transparent, reproducible, and extensible research platform** for hybrid optimization algorithms.
