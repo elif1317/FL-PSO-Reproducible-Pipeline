@@ -1,41 +1,68 @@
 # FL-PSO Reproducible Pipeline
 
-This repository provides a **fully reproducible experimental pipeline** for the proposed:
+This repository provides a reproducible experimental pipeline for the proposed **Residual-Guided Fractional-Langevin Particle Swarm Optimization (FL-PSO)** framework.
 
-> **Residual-Guided Fractional-Langevin Particle Swarm Optimization (FL-PSO)**
+The project includes:
 
-The framework integrates:
-- fractional-order memory effects,
-- Ornstein–Uhlenbeck drift,
-- time-decaying Langevin noise,
-- and residual-guided correction dynamics.
-
----
-
-## 🚀 Features
-
-- Modular FL-PSO implementations (full + ablation variants)
-- Classical benchmark suite (24 functions)
-- Engineering optimization problems
-- Config-driven experiment setup
-- Reproducible pipeline structure
-- Statistical evaluation support (Wilcoxon, Friedman, etc.)
+- modular optimizer implementations,
+- benchmark evaluation,
+- engineering optimization problems,
+- ablation settings,
+- reproducible experiment configuration.
 
 ---
 
-## 📂 Repository Structure
+## Repository Structure
 
 ```text
 FL-PSO-Reproducible-Pipeline/
-├── configs/              # Experiment configurations
-├── scripts/              # Main pipeline entry
-├── src/flpso/            # Core implementation
-│   ├── optimizers.py
-│   ├── benchmarks.py
-│   ├── config.py
-│   └── cec.py
-├── results/              # Output (auto-generated)
-├── requirements.txt
+├── configs/
+├── scripts/
+├── src/
+│   └── flpso/
+├── .gitignore
 ├── CITATION.cff
+├── LICENSE
 ├── README.md
-└── LICENSE
+└── requirements.txt
+```
+
+## Installation
+
+Install the required dependencies with:
+
+```bash
+pip install -r requirements.txt
+```
+
+## Run Pipeline
+
+Run the full experimental pipeline with:
+
+```bash
+python scripts/run_full_pipeline.py
+```
+
+## Data Layout
+
+Benchmark-related files should be placed under:
+
+```text
+data/
+├── cec2017/
+├── cec2022/
+└── wrappers/
+```
+
+## Current Scope
+
+The repository currently contains:
+
+- FL-PSO and baseline optimizer implementations,
+- engineering and benchmark problem definitions,
+- modular configuration support,
+- an experimental pipeline entry point.
+
+## Citation
+
+If you use this repository, please cite the associated article listed in `CITATION.cff`.
