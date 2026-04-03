@@ -1,32 +1,189 @@
-# FL-PSO: Residual-Guided Fractional-Langevin Particle Swarm Optimization
-
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-
-A reproducible experimental framework for **Residual-Guided Fractional-Langevin Particle Swarm Optimization (FL-PSO)**.
+# 🚀 FL-PSO Reproducible Pipeline  
+**Residual-guided Fractional–Langevin Particle Swarm Optimization**
 
 ---
 
-## 🚀 Features
+## 📌 Overview
 
-- Modular FL-PSO implementations (full + ablation variants)
-- Classical benchmark suite (24 functions)
-- Engineering optimization problems
-- Config-driven experiment setup
-- Reproducible pipeline structure
-- Statistical evaluation (Wilcoxon, Friedman, etc.)
+This repository provides a **fully reproducible experimental pipeline** for the paper:
+
+> **Residual-guided Fractional–Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization**  
+> Swarm and Evolutionary Computation, 2026  
+> DOI: https://doi.org/10.1016/j.swevo.2026.102367
+
+The proposed **FL-PSO framework** integrates:
+- Fractional-order memory effects  
+- Langevin-type stochastic stabilization  
+- Residual-guided correction dynamics  
+
+into a unified swarm optimization scheme.
 
 ---
 
-## ⚙️ Installation
+## 🎯 Purpose of This Repository
+
+This repository is designed to:
+
+- ✅ Reproduce all experimental results reported in the paper  
+- ✅ Provide a modular and extensible benchmarking pipeline  
+- ✅ Enable fair comparison with classical and modern optimization algorithms  
+- ✅ Ensure **full transparency and reproducibility**
+
+---
+
+## ⚡ Quick Start (30 seconds)
 
 ```bash
+git clone https://github.com/elif1317/FL-PSO-Reproducible-Pipeline.git
+cd FL-PSO-Reproducible-Pipeline
 pip install -r requirements.txt
+
+python scripts/run_full_pipeline.py
+```
+
+### ✔ Expected Output
+
+```
+results/
+  classical/
+  ablation/
+  engineering/
+  statistics/
+  plots/
+```
+
+Includes:
+- Per-run logs  
+- Aggregated results  
+- Statistical test outputs  
+- Convergence plots  
+
+---
+
+## 🧠 What This Repository Reproduces
+
+| Paper Component | Reproduced |
+|------|--------|
+| Classical benchmark results (CEC-style) | ✅ |
+| Ablation study (FL-PSO components) | ✅ |
+| Convergence behavior analysis | ✅ |
+| Statistical comparison (Wilcoxon, Friedman) | ✅ |
+| Engineering optimization cases | ✅ |
+
+---
+
+## 🏗️ Repository Structure
+
+```
+FL-PSO-Reproducible-Pipeline/
+│
+├── configs/              # Experiment configurations
+├── scripts/              # Execution scripts (entry points)
+├── src/flpso/            # Core implementation
+│
+├── data/                 # (User-provided or auto-created)
+├── results/              # (Generated outputs)
+│
+├── requirements.txt
+├── README.md
+├── LICENSE
+├── CITATION.cff
 ```
 
 ---
 
-## ▶️ Run Pipeline
+## ⚙️ Pipeline Architecture
+
+```
+Configuration
+     ↓
+Benchmark Functions / Engineering Problems
+     ↓
+FL-PSO Variants + Baselines
+     ↓
+Multiple Independent Runs
+     ↓
+Statistical Analysis
+     ↓
+Tables + Plots + Logs
+```
+
+---
+
+## 🧪 Algorithm Variants
+
+The following configurations are supported:
+
+- **FL-PSO (Full Model)**  
+- FL-PSO w/o fractional memory  
+- FL-PSO w/o OU drift  
+- FL-PSO w/o Langevin perturbation  
+- Residual-only PSO  
+
+These enable **systematic ablation analysis**.
+
+---
+
+## 📊 Statistical Evaluation
+
+The pipeline includes:
+
+- Wilcoxon signed-rank test  
+- Friedman test  
+- Holm / Bonferroni corrections  
+- Win/Loss analysis  
+
+### Output
+
+```
+results/statistics/
+  wilcoxon.csv
+  friedman.csv
+  rankings.csv
+```
+
+---
+
+## 📦 Dependencies
+
+Main dependencies:
+
+- numpy  
+- scipy  
+- pandas  
+- matplotlib  
+- opfunu  
+- tqdm  
+- pyyaml  
+
+Tested with:
+
+```
+Python >= 3.9
+```
+
+---
+
+## 📁 Data Setup
+
+### Benchmark Functions
+
+- Classical benchmarks: included or generated automatically  
+- CEC benchmarks: optional external setup  
+
+If required:
+
+```
+data/
+  cec2017/
+  cec2022/
+```
+
+> ⚠️ If CEC datasets are not installed, the pipeline will fallback to available functions.
+
+---
+
+## ▶️ Running Experiments
 
 ```bash
 python scripts/run_full_pipeline.py
@@ -34,84 +191,62 @@ python scripts/run_full_pipeline.py
 
 ---
 
-## 📂 Repository Structure
+## 📈 Example Console Output
 
-```text
-FL-PSO-Reproducible-Pipeline/
-├── configs/
-├── scripts/
-│   └── run_full_pipeline.py
-├── src/
-│   └── flpso/
-│       ├── optimizers.py
-│       ├── benchmarks.py
-│       ├── config.py
-│       └── cec.py
-├── results/
-├── requirements.txt
-├── CITATION.cff
-├── README.md
-└── LICENSE
+```
+[INFO] Root directory: ...
+[INFO] Output directory: ...
+[INFO] Loaded algorithms: FL-PSO, PSO, DE
+[INFO] Benchmark: CEC2022
+[INFO] Seed: 42
+
+[INFO] Running experiments...
+[INFO] Completed successfully.
 ```
 
 ---
 
-## 📊 Supported Benchmarks
+## 🔬 Reproducibility Guarantees
 
-### Classical Functions
-- 24 standard optimization functions  
-- unimodal, multimodal, hybrid, composite  
-
-### Engineering Problems
-- Spring design  
-- Pressure vessel  
-- Welded beam  
-- Speed reducer  
+- Fixed random seeds  
+- Config-driven experiment setup  
+- Deterministic evaluation pipeline  
+- Explicit logging of all runs  
 
 ---
 
-## 📁 Data Layout
+## 📊 Generated Outputs
 
-```text
-data/
-├── cec2017/
-├── cec2022/
-└── wrappers/
 ```
-
-CEC data sources:
-- https://github.com/P-N-Suganthan/CEC2017  
-- Official CEC2022 sources  
-
----
-
-## 📈 Output
-
-Results are saved under:
-
-```text
 results/
+  logs/
+  tables/
+  statistics/
+  plots/
 ```
 
 Includes:
-- per-run logs  
-- aggregated statistics  
-- convergence curves  
-- diversity metrics  
-- statistical test results  
+
+- Convergence curves  
+- Performance tables  
+- Statistical comparisons  
 
 ---
 
-## 🔁 Reproducibility
+## 🧩 Extensibility
 
-- Fixed seed (2025)
-- Deterministic hashing-based runs
-- No hard-coded paths
-- Config-driven experiments
+You can easily:
+
+- Add new algorithms (`src/flpso/`)  
+- Add new benchmark functions  
+- Modify experiment settings (`configs/`)  
+- Extend statistical analysis  
 
 ---
 
-## 📖 Citation
+## 📚 Citation
+
+If you use this repository, please cite:
 
 ```bibtex
 @article{DEMIR2026102367,
@@ -125,10 +260,23 @@ author = {Elif Demir and Yusuf Zeren and Suayip Toprakseven and Alpaslan Demirci
 }
 ```
 
-See also `CITATION.cff`.
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
 
 ---
 
-## 📬 Contact
+## 🤝 Acknowledgments
 
-For academic collaboration, open an issue or contact the authors.
+Developed within the framework of:
+
+- Yıldız Technical University  
+- Research in fractional dynamics and optimization  
+
+---
+
+## 🚀 Final Note
+
+This repository is intended to serve as a **transparent, reproducible, and extensible research platform** for hybrid optimization algorithms.
