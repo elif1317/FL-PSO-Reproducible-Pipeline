@@ -1,25 +1,41 @@
 # FL-PSO Reproducible Pipeline
 
-This repository contains the experimental pipeline for **Residual-Corrected Fractional-Langevin Particle Swarm Optimization (FL-PSO)**.
+This repository provides a **fully reproducible experimental pipeline** for the proposed:
 
-It includes:
-- benchmark experiments,
-- ablation studies,
-- sensitivity analyses,
-- engineering optimization cases,
-- and multi-objective case studies.
+> **Residual-Guided Fractional-Langevin Particle Swarm Optimization (FL-PSO)**
 
-## Repository Structure
+The framework integrates:
+- fractional-order memory effects,
+- Ornstein–Uhlenbeck drift,
+- time-decaying Langevin noise,
+- and residual-guided correction dynamics.
+
+---
+
+## 🚀 Features
+
+- Modular FL-PSO implementations (full + ablation variants)
+- Classical benchmark suite (24 functions)
+- Engineering optimization problems
+- Config-driven experiment setup
+- Reproducible pipeline structure
+- Statistical evaluation support (Wilcoxon, Friedman, etc.)
+
+---
+
+## 📂 Repository Structure
 
 ```text
 FL-PSO-Reproducible-Pipeline/
-├── README.md
-├── .gitignore
+├── configs/              # Experiment configurations
+├── scripts/              # Main pipeline entry
+├── src/flpso/            # Core implementation
+│   ├── optimizers.py
+│   ├── benchmarks.py
+│   ├── config.py
+│   └── cec.py
+├── results/              # Output (auto-generated)
 ├── requirements.txt
 ├── CITATION.cff
-├── configs/
-├── scripts/
-├── src/
-│   └── flpso/
-├── docs/
-└── tests/
+├── README.md
+└── LICENSE
