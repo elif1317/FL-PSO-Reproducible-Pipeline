@@ -11,6 +11,8 @@ sys.path.append(str(ROOT))
 # =========================
 # IMPORTS
 # =========================
+from src.flpso.optimizers import *
+
 import os
 import time
 import json
