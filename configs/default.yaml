@@ -9,6 +9,7 @@ runs_large_dim: 50
 fe_multiplier: 10000
 
 baseline_algorithm: PSO
+
 save_plots: true
 save_statistics: true
 save_run_metadata: true
