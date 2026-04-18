@@ -1,6 +1,6 @@
-# 🚀 FL-PSO Reproducible Pipeline
+# FL-PSO Reproducible Pipeline
 
-**Residual-guided Fractional–Langevin Particle Swarm Optimization**
+Residual-guided Fractional–Langevin Particle Swarm Optimization
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -8,36 +8,36 @@
 
 ---
 
-## 📌 Overview
+## Overview
 
 This repository provides a **fully reproducible experimental pipeline** for the paper:
 
-> Residual-guided Fractional–Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization
-> *Swarm and Evolutionary Computation*, 2026
-> DOI: https://doi.org/10.1016/j.swevo.2026.102367
+> Residual-guided Fractional–Langevin Particle Swarm Optimization: A hybrid dynamics framework for global optimization  
+> *Swarm and Evolutionary Computation*, 2026  
+> DOI: https://doi.org/10.1016/j.swevo.2026.102367  
 
 The proposed **FL-PSO framework** integrates:
 
-* Fractional-order memory effects
-* Langevin-type stochastic stabilization
-* Residual-guided correction dynamics
+* Fractional-order memory effects  
+* Langevin-type stochastic stabilization  
+* Residual-guided correction dynamics  
 
 into a unified swarm optimization paradigm.
 
 ---
 
-## 🎯 Purpose of This Repository
+## Purpose of This Repository
 
 This repository is designed to:
 
-* ✅ Reproduce all experimental results reported in the paper
-* ✅ Provide a modular and extensible benchmarking pipeline
-* ✅ Enable fair comparison with classical and modern optimization algorithms
-* ✅ Ensure **full transparency and reproducibility**
+* Reproduce all experimental results reported in the paper  
+* Provide a modular and extensible benchmarking pipeline  
+* Enable fair comparison with classical and modern optimization algorithms  
+* Ensure full transparency and reproducibility  
 
 ---
 
-## ⚡ Quick Start (30 seconds)
+## Quick Start
 
 ```bash
 git clone https://github.com/elif1317/FL-PSO-Reproducible-Pipeline.git
@@ -45,16 +45,49 @@ cd FL-PSO-Reproducible-Pipeline
 pip install -r requirements.txt
 
 python scripts/run_full_pipeline.py
+
+# Optional: launch GUI
+python scripts/run_gui.py
 ```
 
-⏱ **Estimated runtime:**
+Estimated runtime:
 
-* Small test: ~2–5 minutes
+* Small test: ~2–5 minutes  
 * Full benchmark: ~1–3 hours (CPU dependent)
 
 ---
 
-## 📊 Mapping to Paper Results
+## Graphical User Interface (GUI)
+
+This interface provides an interactive layer on top of the reproducible pipeline for exploratory analysis and visualization.
+
+In addition to the command-line pipeline, this repository provides an interactive graphical user interface for running and analyzing benchmark experiments.
+
+### Launch the GUI
+
+```bash
+python scripts/run_gui.py
+```
+
+### Features
+
+* Interactive selection of benchmark suites and functions  
+* Selection of optimization algorithms and FL-PSO ablation variants  
+* Adjustable experimental parameters (population size, FE budget, runs, seeds)  
+* Real-time progress monitoring and logging  
+* Convergence and diversity visualization  
+* Statistical summaries and ranking tables  
+* Export of results to CSV format  
+
+### Implementation Notes
+
+* The GUI is currently implemented as a standalone module (`gui/` directory)  
+* All benchmark functions and algorithms are defined internally  
+* No external datasets or configuration files are required for GUI execution  
+
+---
+
+## Mapping to Paper Results
 
 | Paper Element        | Output Location        |
 | -------------------- | ---------------------- |
@@ -66,14 +99,15 @@ python scripts/run_full_pipeline.py
 
 ---
 
-## 🏗️ Repository Structure
+## Repository Structure
 
 ```
 FL-PSO-Reproducible-Pipeline/
 │
 ├── configs/              # Experiment configurations
-├── scripts/              # Execution scripts
+├── scripts/              # Execution scripts (CLI + GUI launcher)
 ├── src/flpso/            # Core implementation
+├── gui/                  # Graphical User Interface
 │
 ├── data/                 # Input data (optional / user-provided)
 ├── results/              # Generated outputs
@@ -86,7 +120,7 @@ FL-PSO-Reproducible-Pipeline/
 
 ---
 
-## ⚙️ Pipeline Architecture
+## Pipeline Architecture
 
 ```
 Configuration
@@ -104,28 +138,28 @@ Tables + Plots + Logs
 
 ---
 
-## 🧪 Algorithm Variants
+## Algorithm Variants
 
 The pipeline supports:
 
-* **FL-PSO (Full Model)**
-* FL-PSO w/o fractional memory
-* FL-PSO w/o OU drift
-* FL-PSO w/o Langevin perturbation
-* Residual-only PSO
+* FL-PSO (Full Model)  
+* FL-PSO without fractional memory  
+* FL-PSO without OU drift  
+* FL-PSO without Langevin perturbation  
+* Residual-only PSO  
 
-These enable systematic **ablation analysis**.
+These enable systematic ablation analysis.
 
 ---
 
-## 📊 Statistical Evaluation
+## Statistical Evaluation
 
 Implemented statistical methods:
 
-* Wilcoxon signed-rank test
-* Friedman test
-* Holm / Bonferroni corrections
-* Win/Loss analysis
+* Wilcoxon signed-rank test  
+* Friedman test  
+* Holm / Bonferroni corrections  
+* Win/Loss analysis  
 
 Output example:
 
@@ -138,17 +172,17 @@ results/statistics/
 
 ---
 
-## 📦 Dependencies
+## Dependencies
 
 Main dependencies:
 
-* numpy
-* scipy
-* pandas
-* matplotlib
-* opfunu
-* tqdm
-* pyyaml
+* numpy  
+* scipy  
+* pandas  
+* matplotlib  
+* opfunu  
+* tqdm  
+* pyyaml  
 
 Tested with:
 
@@ -156,14 +190,16 @@ Tested with:
 Python >= 3.9
 ```
 
+Note: Tkinter is required for the GUI and is usually included in standard Python installations.
+
 ---
 
-## 📁 Data Setup
+## Data Setup
 
 ### Benchmark Functions
 
-* Classical benchmarks: included / auto-generated
-* CEC benchmarks: optional external setup
+* Classical benchmarks: included / auto-generated  
+* CEC benchmarks: optional external setup  
 
 Example:
 
@@ -173,22 +209,22 @@ data/
   cec2022/
 ```
 
-> ⚠️ If CEC datasets are not installed, fallback benchmarks are used.
+If CEC datasets are not installed, fallback benchmarks are used.
 
 ---
 
-## ▶️ Running Experiments
+## Running Experiments
 
 ```bash
 python scripts/run_full_pipeline.py
 ```
 
-> Note: Current version initializes and validates the pipeline structure.
-> Full experiment modules are modular and extendable via configs.
+Note: Current version initializes and validates the pipeline structure.  
+Full experiment modules are modular and extendable via configs.
 
 ---
 
-## 📈 Example Console Output
+## Example Console Output
 
 ```
 [INFO] Root directory: ...
@@ -203,34 +239,34 @@ python scripts/run_full_pipeline.py
 
 ---
 
-## 🔬 Reproducibility Guarantees
+## Reproducibility Guarantees
 
-* Fixed random seeds
-* Config-driven execution
-* Deterministic pipeline
-* Full logging of all runs
+* Fixed random seeds  
+* Config-driven execution  
+* Deterministic pipeline  
+* Full logging of all runs  
 
 ---
 
-## 🧩 Extensibility
+## Extensibility
 
 You can easily:
 
-* Add new algorithms (`src/flpso/`)
-* Add new benchmarks
-* Modify configs (`configs/`)
-* Extend statistical modules
+* Add new algorithms (`src/flpso/`)  
+* Add new benchmarks  
+* Modify configs (`configs/`)  
+* Extend statistical modules  
 
 ---
 
-## 🚧 Repository Status
+## Repository Status
 
-This repository accompanies a peer-reviewed publication.
-The pipeline is structured for reproducibility and is under active development for extended benchmarks and GUI integration.
+This repository accompanies a peer-reviewed publication.  
+The pipeline is structured for reproducibility and is under active development for extended benchmarks and further GUI enhancements.
 
 ---
 
-## 📚 Citation
+## Citation
 
 ```bibtex
 @article{DEMIR2026102367,
@@ -246,21 +282,21 @@ author = {Elif Demir and Yusuf Zeren and Suayip Toprakseven and Alpaslan Demirci
 
 ---
 
-## 📄 License
+## License
 
 MIT License
 
 ---
 
-## 🤝 Acknowledgments
+## Acknowledgments
 
 Developed within:
 
-* Yıldız Technical University
-* Research in fractional dynamics and optimization
+* Yıldız Technical University  
+* Research in fractional dynamics and optimization  
 
 ---
 
-## 🚀 Final Note
+## Final Note
 
-This repository is intended as a **transparent, reproducible, and extensible research platform** for hybrid optimization algorithms.
+This repository is intended as a transparent, reproducible, and extensible research platform for hybrid optimization algorithms.
