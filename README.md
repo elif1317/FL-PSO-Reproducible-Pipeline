@@ -1,6 +1,6 @@
 # FL-PSO Reproducible Pipeline
 
-Residual-guided Fractional–Langevin Particle Swarm Optimization
+**Residual-guided Fractional–Langevin Particle Swarm Optimization**
 
 ![Python](https://img.shields.io/badge/Python-3.9+-blue)
 ![License](https://img.shields.io/badge/License-MIT-green)
@@ -44,6 +44,7 @@ git clone https://github.com/elif1317/FL-PSO-Reproducible-Pipeline.git
 cd FL-PSO-Reproducible-Pipeline
 pip install -r requirements.txt
 
+# Run CLI pipeline
 python scripts/run_full_pipeline.py
 
 # Optional: launch GUI
@@ -59,9 +60,7 @@ Estimated runtime:
 
 ## Graphical User Interface (GUI)
 
-This interface provides an interactive layer on top of the reproducible pipeline for exploratory analysis and visualization.
-
-In addition to the command-line pipeline, this repository provides an interactive graphical user interface for running and analyzing benchmark experiments.
+This interface provides an interactive layer on top of the reproducible pipeline, enabling exploratory analysis, visualization, and user-friendly experiment configuration beyond the command-line workflow.
 
 ### Launch the GUI
 
